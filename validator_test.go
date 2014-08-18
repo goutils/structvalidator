@@ -10,19 +10,23 @@ type ZeroStruct struct {
 }
 
 type StructWithRegex struct {
-	A string `required:"true" match:"^[a-b0-9]*$"`
+	A string `required:"true" match:"^[a-z0-9]*$"`
 }
 
 type StructWithOptionalFields struct {
 	A int
-	B string `required:true`
+	B string `required:"true"`
+}
+
+type StructWithSliceFields struct {
+	A []int `required:"true"`
 }
 
 func TestValidateFailsForZeroFields(t *testing.T) {
 
 	valid, errors := Validate(ZeroStruct{})
-	if errors != nil && len(errors) != 0 && !valid {
-		fmt.Println("Validator validate zero field")
+	if errors != nil && len(errors) != 0 && valid {
+		fmt.Println(errors)
 		t.Fail()
 	}
 }
@@ -30,9 +34,8 @@ func TestValidateFailsForZeroFields(t *testing.T) {
 func TestValidateMatchesRegex(t *testing.T) {
 
 	valid, errors := Validate(StructWithRegex{"abcd"})
-
-	if errors != nil && !valid {
-		fmt.Println("Matches given pattern")
+	if !valid {
+		fmt.Println(errors)
 		t.Fail()
 	}
 }
@@ -41,8 +44,18 @@ func TestValidateIgnoredOptionalFields(t *testing.T) {
 
 	valid, errors := Validate(StructWithOptionalFields{B:"abcd"})
 
-	if errors != nil && !valid {
-		fmt.Println("Doesn't ignore optional fields")
+	if !valid {
+		fmt.Println(errors)
+		t.Fail()
+	}
+}
+
+func TestValidatesSliceFields(t *testing.T) {
+
+	valid, errors := Validate(StructWithSliceFields{})
+
+	if valid {
+		fmt.Println(errors)
 		t.Fail()
 	}
 }

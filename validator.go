@@ -27,7 +27,9 @@ func Validate(v interface{}) (bool, []error) {
 
 		case reflect.Struct:
 			_, err := Validate(fieldValue.Interface())
-			validationErrors = append(validationErrors, err...)
+			if err!=nil && len(err) != 0 {
+				validationErrors = append(validationErrors, err...)
+			}
 		//TODO validate slice elements
 		case reflect.Slice:
 			status := field.Tag.Get(REQUIRED)
@@ -39,10 +41,18 @@ func Validate(v interface{}) (bool, []error) {
 			}
 		default:
 			err := validateField(field, fieldValue)
-			validationErrors = append(validationErrors, err)
+			if err != nil {
+				validationErrors = append(validationErrors, err)
+			}
 		}
 	}
-	return true, validationErrors
+
+	if len(validationErrors) == 0 {
+		return true, validationErrors
+	} else {
+		return false, validationErrors
+	}
+
 }
 
 func validateField(field reflect.StructField, fieldValue reflect.Value) error{
@@ -55,12 +65,12 @@ func validateField(field reflect.StructField, fieldValue reflect.Value) error{
 		regex := field.Tag.Get(MATCH)
 		if regex != "" {
 			str, ok := fieldValue.Interface().(string)
+
 			if !ok {
 				err := errors.New("Not a string " + field.Name)
 				return err
 			}
 			matched, err := regexp.MatchString(regex, str)
-
 			if err != nil || !matched {
 				err := errors.New("Doesn't match pattern " + field.Name)
 				return err
