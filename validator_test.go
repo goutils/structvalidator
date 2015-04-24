@@ -1,61 +1,67 @@
 package structvalidator
 
-import (
-	"testing"
-	"fmt"
-)
-
-type ZeroStruct struct {
-	A int `required:"true"`
-}
-
-type StructWithRegex struct {
-	A string `required:"true" match:"^[a-z0-9]*$"`
-}
-
-type StructWithOptionalFields struct {
-	A int
-	B string `required:"true"`
-}
-
-type StructWithSliceFields struct {
-	A []int `required:"true"`
-}
+import "testing"
 
 func TestValidateFailsForZeroFields(t *testing.T) {
+	type ZeroStruct struct {
+		A int `required:"true"`
+	}
 
 	valid, errors := Validate(ZeroStruct{})
 	if errors != nil && len(errors) != 0 && valid {
-		fmt.Println(errors)
+		t.Log(errors)
 		t.Fail()
 	}
 }
 
 func TestValidateMatchesRegex(t *testing.T) {
+	type StructWithRegex struct {
+		A string `required:"true" match:"^[a-z0-9]*$"`
+	}
 
-	valid, errors := Validate(StructWithRegex{"abcd"})
+	valid, errors := Validate(StructWithRegex{"a2bcd"})
 	if !valid {
-		fmt.Println(errors)
+		t.Log(errors)
 		t.Fail()
 	}
 }
 
-func TestValidateIgnoredOptionalFields(t *testing.T) {
+func TestValidateOnlyRequiredFields(t *testing.T) {
+	type Struct struct {
+		A int
+		B string `required:"true"`
+	}
 
-	valid, errors := Validate(StructWithOptionalFields{B:"abcd"})
-
+	valid, errors := Validate(Struct{B: "abcd"})
 	if !valid {
-		fmt.Println(errors)
+		t.Log(errors)
 		t.Fail()
 	}
 }
 
 func TestValidatesSliceFields(t *testing.T) {
+	type StructWithSliceFields struct {
+		A []int `required:"true"`
+	}
 
 	valid, errors := Validate(StructWithSliceFields{})
-
 	if valid {
-		fmt.Println(errors)
+		t.Log(errors)
+		t.Fail()
+	}
+}
+
+func TestValidateShouldIgnoreSpecifiedFields(t *testing.T) {
+	type StructWithMandatoryFields struct {
+		A int      `required:"true"`
+		B string   `required:"true"`
+		C string   `required:"true"`
+		D []string `required:"true"`
+	}
+
+	valid, errs := Validate(StructWithMandatoryFields{A: 123}, "B", "C", "D")
+	if !valid {
+		t.Log(errs)
 		t.Fail()
 	}
 }

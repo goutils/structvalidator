@@ -1,33 +1,34 @@
 package structvalidator
 
 import (
-	"reflect"
 	"errors"
+	"reflect"
 	"regexp"
 )
 
 const (
 	REQUIRED = "required"
-	MATCH = "match"
+	MATCH    = "match"
 )
 
-
-func Validate(v interface{}) (bool, []error) {
+func Validate(v interface{}, ignoreList ...string) (bool, []error) {
 	var validationErrors []error
 	vType := reflect.TypeOf(v)
 	value := reflect.ValueOf(v)
 
 	for index := 0; index < vType.NumField(); index++ {
-
 		field := vType.Field(index)
 		fieldValue := value.FieldByName(field.Name)
 
+		if HasString(field.Name, ignoreList) {
+			continue
+		}
 
 		switch fieldValue.Kind() {
 
 		case reflect.Struct:
 			_, err := Validate(fieldValue.Interface())
-			if err!=nil && len(err) != 0 {
+			if err != nil && len(err) != 0 {
 				validationErrors = append(validationErrors, err...)
 			}
 		//TODO validate slice elements
@@ -55,9 +56,9 @@ func Validate(v interface{}) (bool, []error) {
 
 }
 
-func validateField(field reflect.StructField, fieldValue reflect.Value) error{
+func validateField(field reflect.StructField, fieldValue reflect.Value) error {
 	status := field.Tag.Get(REQUIRED)
-	if status == "true"{
+	if status == "true" {
 		if fieldValue.Interface() == reflect.Zero(fieldValue.Type()).Interface() {
 			err := errors.New("Required Field " + field.Name)
 			return err
@@ -80,4 +81,12 @@ func validateField(field reflect.StructField, fieldValue reflect.Value) error{
 	return nil
 }
 
+func HasString(stringToSearch string, allStrings []string) bool {
+	for _, strg := range allStrings {
+		if stringToSearch == strg {
+			return true
+		}
+	}
 
+	return false
+}
