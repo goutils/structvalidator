@@ -27,7 +27,7 @@ func Validate(v interface{}, ignoreList ...string) (bool, []error) {
 		switch fieldValue.Kind() {
 
 		case reflect.Struct:
-			_, err := Validate(fieldValue.Interface())
+			_, err := Validate(fieldValue.Interface(), ignoreList...)
 			if err != nil && len(err) != 0 {
 				validationErrors = append(validationErrors, err...)
 			}

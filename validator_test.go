@@ -65,3 +65,22 @@ func TestValidateShouldIgnoreSpecifiedFields(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestValidateShouldIgnoreSpecifiedFieldsInEmbeddedStruct(t *testing.T) {
+	type AnotherStruct struct {
+		A int `required:"true"`
+	}
+
+	type StructWithMandatoryFields struct {
+		AnotherStruct
+		B string   `required:"true"`
+		C string   `required:"true"`
+		D []string `required:"true"`
+	}
+
+	valid, errs := Validate(StructWithMandatoryFields{}, "A", "B", "C", "D")
+	if !valid {
+		t.Log(errs)
+		t.Fail()
+	}
+}
